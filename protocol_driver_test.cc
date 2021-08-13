@@ -196,6 +196,12 @@ ProtocolDriverOptions GrpcCallbackOptions() {
   return ret;
 }
 
+ProtocolDriverOptions ThriftOptions() {
+  ProtocolDriverOptions ret;
+  ret.set_protocol_name("thrift");
+  return ret;
+}
+
 void BM_GrpcEcho(benchmark::State &state) {
   Echo(state, GrpcOptions());
 }
@@ -209,6 +215,6 @@ BENCHMARK(BM_GrpcCallbackEcho);
 
 INSTANTIATE_TEST_SUITE_P(
     ProtocolDriverTests, ProtocolDriverTest,
-    testing::Values(GrpcOptions(), GrpcCallbackOptions()));
+    testing::Values(GrpcOptions(), GrpcCallbackOptions(), ThriftOptions()));
 
 }  // namespace distbench

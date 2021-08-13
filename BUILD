@@ -88,7 +88,8 @@ cc_library(
         ":distbench_cc_proto",
         ":protocol_driver_api",
         ":protocol_driver_grpc",
-        ":protocol_driver_grpc_async_callback"
+        ":protocol_driver_grpc_async_callback",
+        ":protocol_driver_thrift"
     ],
 )
 
@@ -252,6 +253,16 @@ cc_library(
     ],
 )
 
+cc_library(
+    name = "distbench_thrift_lib",
+    srcs = ["gen-cpp/Distbench.cpp", "gen-cpp/distbench_types.cpp"],
+    hdrs = ["gen-cpp/Distbench.h", "gen-cpp/distbench_types.h"],
+    strip_include_prefix = "gen-cpp/",
+    deps = [
+        "@apache_thrift//:thrift",
+    ],
+)
+
 cc_test(
     name = "distbench_engine_test",
     size = "medium",
@@ -276,3 +287,27 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "thrift_test",
+    srcs = ["thrift_test.cc"],
+    deps = [
+        ":distbench_thrift_lib",
+        "@apache_thrift//:thrift",
+    ],
+)
+
+cc_library(
+    name = "protocol_driver_thrift",
+    srcs = [
+        "protocol_driver_thrift.cc",
+    ],
+    hdrs = [
+        "protocol_driver_thrift.h",
+    ],
+    deps = [
+        ":distbench_utils",
+        ":protocol_driver_api",
+        ":distbench_thrift_lib",
+        "@apache_thrift//:thrift",
+    ],
+)
