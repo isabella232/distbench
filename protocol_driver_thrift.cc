@@ -70,10 +70,10 @@ void DistbenchThriftHandler::GenericRPC(
     thrift::GenericResponse& _return,
     const thrift::GenericRequest& generic_request) {
 
-  LOG(ERROR) << "DEBUG: Got GenericRPC";
-
   ServerRpcState rpc_state;
   std::string payload = generic_request.payload;
+  LOG(INFO) << "DEBUG: Got GenericRPC payload = " << payload;
+
   distbench::GenericRequest request;
   bool success = request.ParseFromString(payload);
   if (!success) {
