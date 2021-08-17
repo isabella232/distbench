@@ -39,8 +39,8 @@ class DistbenchThriftHandler : virtual public DistbenchIf {
  public:
   DistbenchThriftHandler() { }
 
-  void GenericRPC(thrift::GenericResponse& _return, const
-                  thrift::GenericRequest& generic_request);
+  void GenericRPC(std::string& _return, const
+                  std::string& generic_request);
 
   void SetHandler(std::function<void(ServerRpcState* state)> handler);
 

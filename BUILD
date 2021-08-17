@@ -255,7 +255,9 @@ cc_library(
 
 cc_library(
     name = "distbench_thrift_lib",
-    srcs = ["gen-cpp/Distbench.cpp", "gen-cpp/distbench_types.cpp"],
+    srcs = ["gen-cpp/Distbench.cpp",
+            # "gen-cpp/distbench_types.cpp"
+           ],
     hdrs = ["gen-cpp/Distbench.h", "gen-cpp/distbench_types.h"],
     strip_include_prefix = "gen-cpp/",
     deps = [

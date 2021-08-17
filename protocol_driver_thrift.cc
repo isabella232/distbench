@@ -67,13 +67,11 @@ ThriftPeerClient::~ThriftPeerClient() {
 }
 
 void DistbenchThriftHandler::GenericRPC(
-    thrift::GenericResponse& _return,
-    const thrift::GenericRequest& generic_request) {
+    std::string& _return,
+    const std::string& payload) {
 
   ServerRpcState rpc_state;
-  std::string payload = generic_request.payload;
-  LOG(INFO) << "DEBUG: Got GenericRPC payload = " << payload;
-
+  //LOG(INFO) << "DEBUG: Got GenericRPC payload = " << payload;
   distbench::GenericRequest request;
   bool success = request.ParseFromString(payload);
   if (!success) {
@@ -81,10 +79,8 @@ void DistbenchThriftHandler::GenericRPC(
   }
   rpc_state.request = &request;
   rpc_state.send_response = [&]() {
-    std::string serialized_response_payload;
-    rpc_state.response.SerializeToString(&serialized_response_payload);
-    LOG(INFO) << "DEBUG: GenericRPC response = " <<  rpc_state.response.payload();
-    _return.__set_payload(serialized_response_payload);
+    rpc_state.response.SerializeToString(&_return);
+    //LOG(INFO) << "DEBUG: GenericRPC response = " <<  rpc_state.response.payload();
   };
   handler_(&rpc_state);
 }
@@ -207,14 +203,9 @@ void ProtocolDriverThrift::InitiateRpc(
   std::string request_encoded;
   new_rpc->request.SerializeToString(&request_encoded);
 
-  thrift::GenericResponse thrift_response;
-  thrift::GenericRequest thrift_request;
-
-  thrift_request.payload = request_encoded;
-
-  thrift_peer_clients_[peer_index].client_->GenericRPC(thrift_response,
-      thrift_request);
-  std::string response_encoded = thrift_request.payload;
+  std::string response_encoded;
+  thrift_peer_clients_[peer_index].client_->GenericRPC(response_encoded,
+      request_encoded);
   LOG(INFO) << " Complete got response_encoded" << response_encoded;
   bool success = new_rpc->response.ParseFromString(response_encoded);
   if (!success) {
