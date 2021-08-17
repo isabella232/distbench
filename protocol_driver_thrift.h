@@ -111,6 +111,9 @@ class ProtocolDriverThrift : public ProtocolDriver {
   std::shared_ptr<TProtocolFactory>  thrift_protocolFactory_;
 
   std::unique_ptr<TThreadedServer>   thrift_server_;
+
+  mutable absl::Mutex mutex_server_;
+  bool server_initialized_ ABSL_GUARDED_BY(mutex_server_) = false ;
 };
 
 }  // namespace distbench

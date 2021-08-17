@@ -99,6 +99,13 @@ ProtocolDriverThrift::ProtocolDriverThrift() {
 
 absl::Status ProtocolDriverThrift::Initialize(
       const ProtocolDriverOptions &pd_opts, int* port) {
+  absl::MutexLock m(&mutex_server_);
+
+  if (server_initialized_) {
+    LOG(ERROR) << "Server already initialized !";
+    return absl::UnknownError("Thrift server already initialized !");
+  }
+
   std::string netdev_name = pd_opts.netdev_name();
   server_ip_address_ = IpAddressForDevice(netdev_name);
 
@@ -129,6 +136,7 @@ absl::Status ProtocolDriverThrift::Initialize(
   } };
   sleep(0.3333);
   LOG(INFO) << "Thrift server listening on " << server_socket_address_;
+  server_initialized_ = true;
 
   return absl::OkStatus();
 }
@@ -236,6 +244,15 @@ void ProtocolDriverThrift::ShutdownClient() {
 }
 
 void ProtocolDriverThrift::ShutdownServer() {
+  absl::MutexLock m(&mutex_server_);
+
+  if (!server_initialized_) {
+    LOG(INFO) << "ProtocolDriverThrift::ShutdownServer() called while uninitialized";
+    return;
+  }
+
+  server_initialized_ = false;
+
   LOG(INFO) << "ProtocolDriverThrift::ShutdownServer()";
   thrift_server_->stop();
 
