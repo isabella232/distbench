@@ -222,6 +222,10 @@ TEST(DistBenchTestSequencer, 100k_grpc_async_callback) {
   RunIntenseTraffic("grpc_async_callback");
 }
 
+TEST(DistBenchTestSequencer, 100k_thrift) {
+  RunIntenseTraffic("thrift");
+}
+
 TEST(DistBenchTestSequencer, clique_test) {
   int nb_cliques = 3;
 
