@@ -37,8 +37,7 @@ using namespace  ::thrift;
 
 class DistbenchThriftHandler : virtual public DistbenchIf {
  public:
-  DistbenchThriftHandler() {
-  }
+  DistbenchThriftHandler() { }
 
   void GenericRPC(thrift::GenericResponse& _return, const
                   thrift::GenericRequest& generic_request);
@@ -53,12 +52,17 @@ class TrafficService;
 
 class ThriftPeerClient {
  public:
+  ThriftPeerClient() = default;
+  ThriftPeerClient(const ThriftPeerClient& value) = default;
+  ThriftPeerClient(ThriftPeerClient&& value) = default;
+  ~ThriftPeerClient();
+
   absl::Status HandleConnect(std::string ip_address, int port);
-  std::unique_ptr<DistbenchClient> client;
+  std::unique_ptr<DistbenchClient> client_;
  private:
-  std::shared_ptr<TSocket> socket;
-  std::shared_ptr<TTransport> transport;
-  std::shared_ptr<TProtocol> protocol;
+  std::shared_ptr<TSocket> socket_;
+  std::shared_ptr<TTransport> transport_;
+  std::shared_ptr<TProtocol> protocol_;
 };
 
 class ProtocolDriverThrift : public ProtocolDriver {

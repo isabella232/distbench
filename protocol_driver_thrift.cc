@@ -33,25 +33,37 @@ using namespace ::apache::thrift::protocol;
 using namespace ::apache::thrift::transport;
 using namespace ::apache::thrift::server;
 
-
 absl::Status ThriftPeerClient::HandleConnect(
     std::string ip_address, int port) {
 
   LOG(ERROR) << "ThriftPeerClient connecting to : " << ip_address << ":"
              << port;
 
-  socket = std::make_shared<TSocket>(ip_address, port);
-  transport = std::make_shared<TBufferedTransport>(socket);
-  protocol = std::make_shared<TBinaryProtocol>(transport);
-  client = std::make_unique<DistbenchClient>(protocol);
+  socket_ = std::make_shared<TSocket>(ip_address, port);
+  transport_ = std::make_shared<TBufferedTransport>(socket_);
+  protocol_ = std::make_shared<TBinaryProtocol>(transport_);
+  client_ = std::make_unique<DistbenchClient>(protocol_);
 
   try {
-    transport->open();
+    transport_->open();
   } catch (TException& tx) {
     return absl::UnknownError(tx.what());
   }
 
   return absl::OkStatus();
+}
+
+ThriftPeerClient::~ThriftPeerClient() {
+  try {
+    //transport_->close();
+  }
+  catch (TException& tx) {
+    LOG(ERROR) << "Exception closing Thrift transport! " << tx.what();
+  }
+  client_.reset();
+  protocol_.reset();
+  transport_.reset();
+  socket_.reset();
 }
 
 void DistbenchThriftHandler::GenericRPC(
@@ -191,7 +203,7 @@ void ProtocolDriverThrift::InitiateRpc(
 
   thrift_request.payload = request_encoded;
 
-  thrift_peer_clients_[peer_index].client->GenericRPC(thrift_response,
+  thrift_peer_clients_[peer_index].client_->GenericRPC(thrift_response,
       thrift_request);
   std::string response_encoded = thrift_request.payload;
 
