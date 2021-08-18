@@ -16,8 +16,9 @@
 
 #include "protocol_driver_grpc.h"
 #include "protocol_driver_grpc_async_callback.h"
+#ifdef WITH_THRIFT
 #include "protocol_driver_thrift.h"
-
+#endif
 
 namespace distbench {
 
@@ -27,8 +28,10 @@ std::unique_ptr<ProtocolDriver> AllocateProtocolDriver(
     return std::make_unique<ProtocolDriverGrpc>();
   } else if (opts.protocol_name() == "grpc_async_callback") {
     return std::make_unique<ProtocolDriverGrpcAsyncCallback>();
+#ifdef WITH_THRIFT
   } else if (opts.protocol_name() == "thrift") {
     return std::make_unique<ProtocolDriverThrift>();
+#endif
   }
 
   std::cerr << "Unknown protocol_name: " << opts.protocol_name() << "\n";

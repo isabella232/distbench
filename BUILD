@@ -1,10 +1,21 @@
 load("@rules_proto//proto:defs.bzl", "proto_library")
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_proto_library")
 load("@com_github_grpc_grpc//bazel:cc_grpc_library.bzl", "cc_grpc_library")
+load("@bazel_skylib//rules:common_settings.bzl", "bool_flag")
 
 package(
     default_visibility = ["//visibility:public"],
 )
+
+bool_flag(
+    name = "with-thrift",
+    build_setting_default = False
+)
+
+config_setting(
+    name = "with_thrift",
+    flag_values = {":with-thrift": 'True'}
+    )
 
 cc_library(
     name = "distbench_netutils",
@@ -89,8 +100,13 @@ cc_library(
         ":protocol_driver_api",
         ":protocol_driver_grpc",
         ":protocol_driver_grpc_async_callback",
-        ":protocol_driver_thrift"
-    ],
+    ] + select({
+        "with_thrift": [":protocol_driver_thrift"],
+        "//conditions:default": []
+        }
+        ),
+    copts = select({":with_thrift":["-DWITH_THRIFT"], "//conditions:default": []})
+
 )
 
 cc_library(
