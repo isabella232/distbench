@@ -96,30 +96,31 @@ absl::Status ProtocolDriverThrift::Initialize(
   thrift_handler_ = std::make_unique<DistbenchThriftHandler>();
   thrift_processor_ = std::make_unique<DistbenchProcessor>(thrift_handler_);
 
-  if (*port == 0)
-    *port = 10001 + (gettid() + rand()) % 20000;
-  server_socket_address_ = SocketAddressForDevice(netdev_name, *port);
-  LOG(INFO) << "!!!!" << server_socket_address_;
-  thrift_serverTransport_ = std::make_unique<TServerSocket>(
-      IpAddressForDevice(netdev_name), *port);
-  server_port_ = *port;
-  CHECK(*port != 0);
+  //if (*port == 0)
+  //  *port = 10001 + (gettid() + rand()) % 55000;
+  TServerSocket *socket = new TServerSocket(IpAddressForDevice(netdev_name),
+                                            *port);
+  thrift_serverTransport_ = std::shared_ptr<TServerTransport>(socket);
   thrift_transportFactory_ = std::make_unique<TBufferedTransportFactory>();
   thrift_protocolFactory_ = std::make_unique<TBinaryProtocolFactory>();
-
-  //     transportFactory =
-  //     std::make_shared<TZlibTransportFactory>(transportFactory);
-
+  // thrift_transportFactory_ =
+  //   std::make_shared<TZlibTransportFactory>(thrift_transportFactory_);
   thrift_server_ = std::make_unique<TThreadedServer>(thrift_processor_,
                                                      thrift_serverTransport_,
                                                      thrift_transportFactory_,
                                                      thrift_protocolFactory_);
   server_thread_ = std::thread { [&](){
     thrift_server_->serve();
-    LOG(INFO) << "thrift_server_ shutdown";
+    LOG(INFO) << "thrift_server_ stopped serving";
   } };
-  sleep(0.3333);
+
+  while (!socket->isOpen())
+    ;
+  *port = socket->getPort();
+  server_port_ = *port;
+  server_socket_address_ = SocketAddressForDevice(netdev_name, *port);
   LOG(INFO) << "Thrift server listening on " << server_socket_address_;
+
   server_initialized_ = true;
 
   return absl::OkStatus();
