@@ -35,10 +35,6 @@ using namespace ::apache::thrift::server;
 
 absl::Status ThriftPeerClient::HandleConnect(
     std::string ip_address, int port) {
-
-  LOG(ERROR) << "ThriftPeerClient connecting to : " << ip_address << ":"
-             << port;
-
   socket_ = std::make_shared<TSocket>(ip_address, port);
   transport_ = std::make_shared<TBufferedTransport>(socket_);
   protocol_ = std::make_shared<TBinaryProtocol>(transport_);
@@ -54,12 +50,6 @@ absl::Status ThriftPeerClient::HandleConnect(
 }
 
 ThriftPeerClient::~ThriftPeerClient() {
-  try {
-    //transport_->close();
-  }
-  catch (TException& tx) {
-    LOG(ERROR) << "Exception closing Thrift transport! " << tx.what();
-  }
   client_.reset();
   protocol_.reset();
   transport_.reset();
@@ -71,7 +61,6 @@ void DistbenchThriftHandler::GenericRPC(
     const std::string& payload) {
 
   ServerRpcState rpc_state;
-  //LOG(INFO) << "DEBUG: Got GenericRPC payload = " << payload;
   distbench::GenericRequest request;
   bool success = request.ParseFromString(payload);
   if (!success) {
@@ -80,7 +69,6 @@ void DistbenchThriftHandler::GenericRPC(
   rpc_state.request = &request;
   rpc_state.send_response = [&]() {
     rpc_state.response.SerializeToString(&_return);
-    //LOG(INFO) << "DEBUG: GenericRPC response = " <<  rpc_state.response.payload();
   };
   handler_(&rpc_state);
 }
@@ -168,7 +156,7 @@ absl::Status ProtocolDriverThrift::HandleConnect(
   CHECK_LT(static_cast<size_t>(peer), thrift_peer_clients_.size());
   ServerAddress addr;
   addr.ParseFromString(remote_connection_info);
-  LOG(INFO) << "HandleConnect to " << addr.DebugString();
+  LOG(INFO) << "Thrift HandleConnect to " << addr.socket_address();
 
   return thrift_peer_clients_[peer].HandleConnect(addr.ip_address(),
                                                   addr.port());
@@ -206,17 +194,13 @@ void ProtocolDriverThrift::InitiateRpc(
   std::string response_encoded;
   thrift_peer_clients_[peer_index].client_->GenericRPC(response_encoded,
       request_encoded);
-  LOG(INFO) << " Complete got response_encoded" << response_encoded;
   bool success = new_rpc->response.ParseFromString(response_encoded);
   if (!success) {
     LOG(ERROR) << "Unable to decode payload";
   } else {
-    LOG(INFO) << "ParseFromString OK; payload = " <<
-              new_rpc->response.payload();
     new_rpc->state->request = std::move(new_rpc->request);
     new_rpc->state->response = std::move(new_rpc->response);
   }
-
   new_rpc->state->success = success;
   new_rpc->done_callback();
 
@@ -238,13 +222,12 @@ void ProtocolDriverThrift::ShutdownServer() {
   absl::MutexLock m(&mutex_server_);
 
   if (!server_initialized_) {
-    LOG(INFO) << "ProtocolDriverThrift::ShutdownServer() called while uninitialized";
+    LOG(INFO) << "ShutdownServer called while uninitialized !";
     return;
   }
 
   server_initialized_ = false;
 
-  LOG(INFO) << "ProtocolDriverThrift::ShutdownServer()";
   thrift_server_->stop();
 
   // Wait for shutdown
