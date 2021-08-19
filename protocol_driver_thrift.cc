@@ -95,16 +95,11 @@ absl::Status ProtocolDriverThrift::Initialize(
 
   thrift_handler_ = std::make_unique<DistbenchThriftHandler>();
   thrift_processor_ = std::make_unique<DistbenchProcessor>(thrift_handler_);
-
-  //if (*port == 0)
-  //  *port = 10001 + (gettid() + rand()) % 55000;
   TServerSocket *socket = new TServerSocket(IpAddressForDevice(netdev_name),
                                             *port);
   thrift_serverTransport_ = std::shared_ptr<TServerTransport>(socket);
   thrift_transportFactory_ = std::make_unique<TBufferedTransportFactory>();
   thrift_protocolFactory_ = std::make_unique<TBinaryProtocolFactory>();
-  // thrift_transportFactory_ =
-  //   std::make_shared<TZlibTransportFactory>(thrift_transportFactory_);
   thrift_server_ = std::make_unique<TThreadedServer>(thrift_processor_,
                                                      thrift_serverTransport_,
                                                      thrift_transportFactory_,
@@ -209,9 +204,6 @@ void ProtocolDriverThrift::InitiateRpc(
   --pending_rpcs_;
 }
 
-void ProtocolDriverThrift::RpcCompletionThread() {
-}
-
 void ProtocolDriverThrift::ChurnConnection(int peer) {}
 
 void ProtocolDriverThrift::ShutdownClient() {
@@ -231,7 +223,7 @@ void ProtocolDriverThrift::ShutdownServer() {
 
   thrift_server_->stop();
 
-  // Wait for shutdown
+  // Wait for thrift_server_ to shutdown
   server_thread_.join();
 }
 
