@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+DISTBENCH_EXTRA_BAZEL_OPTIONS="${DISTBENCH_EXTRA_BAZEL_OPTIONS:-}"
+
 check_dependencies() {
   # Verify that the needed tools are presents
   #
@@ -101,7 +103,7 @@ check_dependencies
 #
 echo DistBench built, starting up an instance on localhost...
 if [[ "${DEBUG}" = "1" ]]; then
-  echo_and_run bazel build --compilation_mode=dbg :all
+  echo_and_run bazel build --compilation_mode=dbg $DISTBENCH_EXTRA_BAZEL_OPTIONS :all
   run_gdb_backtrace bazel-bin/distbench test_sequencer --port=10000 &
   sleep 3
   run_gdb_backtrace
@@ -114,20 +116,20 @@ else
   build_distbench
 
   echo Starting the Distbench test sequencer
-  echo_and_run bazel run :distbench -c opt -- test_sequencer --port=10000 &
+  echo_and_run bazel run :distbench -c opt $DISTBENCH_EXTRA_BAZEL_OPTIONS -- test_sequencer --port=10000 &
   sleep 3
 
   echo Starting $NODE_MANAGER_COUNT Distbench node managers
   for i in $(seq 1 1 $NODE_MANAGER_COUNT)
   do
-    echo_and_run bazel run :distbench -c opt -- node_manager --test_sequencer=localhost:10000 --port=$((9999-$i)) --default_data_plane_device=lo &
+    echo_and_run bazel run :distbench -c opt $DISTBENCH_EXTRA_BAZEL_OPTIONS -- node_manager --test_sequencer=localhost:10000 --port=$((9999-$i)) --default_data_plane_device=lo &
   done
   sleep 5
 fi
 
 # Verify that Distbench is up and running
 #
-echo | bazel run :distbench -c opt -- run_tests --test_sequencer=localhost:10000
+echo | bazel run :distbench -c opt $DISTBENCH_EXTRA_BAZEL_OPTIONS -- run_tests --test_sequencer=localhost:10000
 if [ $? -ne 0 ]; then
   echo Error could not connect to the distbench test sequencer.
   echo Something went wrong while starting Distbench...
