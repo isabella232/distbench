@@ -15,7 +15,7 @@ bool_flag(
 config_setting(
     name = "with_thrift",
     flag_values = {":with-thrift": 'True'}
-    )
+)
 
 cc_library(
     name = "distbench_netutils",
@@ -100,13 +100,15 @@ cc_library(
         ":protocol_driver_api",
         ":protocol_driver_grpc",
         ":protocol_driver_grpc_async_callback",
-    ] + select({
+    ]
+    + select({
         "with_thrift": [":protocol_driver_thrift"],
         "//conditions:default": []
-        }
-        ),
-    copts = select({":with_thrift":["-DWITH_THRIFT"], "//conditions:default": []})
-
+    }),
+    copts = select({
+        ":with_thrift":["-DWITH_THRIFT"],
+        "//conditions:default": []
+    })
 )
 
 cc_library(

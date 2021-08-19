@@ -215,6 +215,12 @@ BENCHMARK(BM_GrpcCallbackEcho);
 
 INSTANTIATE_TEST_SUITE_P(
     ProtocolDriverTests, ProtocolDriverTest,
-    testing::Values(GrpcOptions(), GrpcCallbackOptions(), ThriftOptions()));
+    testing::Values(
+        GrpcOptions(), GrpcCallbackOptions()
+#ifdef WITH_THRIFT
+        , ThriftOptions()
+#endif
+    )
+);
 
 }  // namespace distbench
